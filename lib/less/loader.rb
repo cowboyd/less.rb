@@ -19,12 +19,7 @@ module Less
         filename = path =~ /\.js$/ ? path : "#{path}.js"
         filepath = @path.join(filename)
         fail LoadError, "no such file: #{filename}" unless filepath.exist?
-        load = @cxt.eval(<<-EOJS)
-(function(process, require, exports, __dirname) {
-  require.paths = [];
-  #{File.read(filepath)}})", filepath.expand_path
-)
-EOJS
+        load = @cxt.eval("(function(process, require, exports, __dirname) {require.paths = [];#{File.read(filepath)}})", filepath.expand_path)
         @exports[path] = exports = @cxt['Object'].new
         load.call(@process, method(:require), exports, Dir.pwd)
       end
