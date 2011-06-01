@@ -3,16 +3,30 @@ require 'v8'
 
 module Less
   class Parser
-    LESSJS = File.dirname(__FILE__) + '/../../deps/less.js/dist/less-1.0.33.js'
-    def initialize
-      @v8 = V8::Context.new
-      @window = @v8['window'] = @v8.scope
-      @v8.eval <<-JS
-window.location = {
-  port: ''
-}
-JS
-      @v8.load(LESSJS)
+
+    def initialize(options = {})
+      @options = options
+      @parser = Less.Parser.new
+    end
+
+    def parse(less)
+      error,tree = nil
+      @parser.parse(less, lambda {|e, t| error = e; tree = t})
+      return Tree.new(tree) if tree
+      fail ParseError, error if error
+    end
+
+  end
+  
+  class Tree
+    def initialize(tree)
+      @tree = tree
+    end
+    
+    def to_css
+      @tree.toCSS()
     end
   end
+  
+  ParseError = Class.new(StandardError)
 end

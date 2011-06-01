@@ -21,5 +21,6 @@ Gem::Specification.new do |s|
   
   s.add_dependency "therubyracer", "~> 0.9.0beta5"
   s.add_development_dependency "rake", "~> 0.8.0"
+  s.add_development_dependency "rspec", "~> 2.0"
 end
 
