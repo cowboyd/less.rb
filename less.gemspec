@@ -15,6 +15,9 @@ Gem::Specification.new do |s|
   s.rubyforge_project = "less"
 
   s.files         = `git ls-files`.split("\n")
+  Dir.chdir('lib/less/js') do
+    s.files += `git ls-files`.split("\n").map {|f| File.join('lib/less/js',f)}
+  end
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
