@@ -10,6 +10,8 @@ module Less
         "sys" => Sys.new,
         "fs" => Fs.new
       }
+      @process = Process.new
+      @cxt['console'] = Console.new
     end
     
     def require(path)
@@ -17,9 +19,9 @@ module Less
         filename = path =~ /\.js$/ ? path : "#{path}.js"
         filepath = @path.join(filename)
         fail LoadError, "no such file: #{filename}" unless filepath.exist?
-        load = @cxt.eval("(function(require, exports, __dirname) {require.paths = [];#{File.read(filepath)}})", filepath.expand_path)
+        load = @cxt.eval("(function(process, require, exports, __dirname) {require.paths = [];#{File.read(filepath)}})", filepath.expand_path)
         @exports[path] = exports = @cxt['Object'].new
-        load.call(method(:require), exports, Dir.pwd)
+        load.call(@process, method(:require), exports, Dir.pwd)
       end
       return exports
     end
@@ -28,10 +30,38 @@ module Less
       def join(*components)
         File.join(*components)
       end
+      
+      def dirname(path)
+        File.dirname(path)
+      end
     end
+    
     class Sys
+      def error(*errors)
+        raise errors.join(' ')
+      end
     end
+
     class Fs
+      def statSync(path)
+        File.stat(path)
+      end
+      
+      def readFile(path, encoding, callback)
+        callback.call(nil, File.read(path))
+      end
+      
+    end
+
+    class Process
+      def exit(*args)
+      end
+    end
+    
+    class Console
+      def log(*msgs)
+        puts msgs.join(',')
+      end
     end
   end
 end
