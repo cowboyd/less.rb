@@ -7,7 +7,11 @@ describe Less::Parser do
   describe "simple usage" do
     it "parse less into a tree" do
       root = subject.parse(".class {width: 1+1}")
-      root.to_css.gsub(/\n/,'').should eql ".class {  width: 2;}"
+      root.to_css.should eql ".class {  width: 2;}"
+    end
+
+    it "accepts options when assembling the parse tree" do
+      subject.parse(".class {width: 1+1}").to_css(:compress => true).strip.should eql ".class{width:2;}"
     end
   end
   it "throws a ParseError if the lesscss is bogus" do

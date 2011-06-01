@@ -27,8 +27,8 @@ module Less
       @tree = tree
     end
 
-    def to_css
-      @tree.toCSS()
+    def to_css(options = {})
+      @tree.toCSS(options)
     end
   end
   
