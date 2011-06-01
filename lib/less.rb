@@ -10,11 +10,8 @@ module Less
   @loader = Less::Loader.new
   @less = @loader.require('less/index')
 
-  def self.method_missing(name, *args)
-    if args.length == 0 && value = @less[name]
-      return value
-    else
-      super(name, *args)
-    end
+  def self.Parser
+    @less['Parser']
   end
+
 end
