@@ -3,6 +3,7 @@ $:.unshift(File.dirname(__FILE__)) unless
 
 module Less
   require 'v8'
+  require 'pathname'
   require 'less/parser'
   require 'less/loader'
   require 'less/version'
