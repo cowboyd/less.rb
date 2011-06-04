@@ -8,9 +8,9 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Charles Lowell"]
   s.email       = ["cowboyd@thefrontside.net"]
-  s.homepage    = "http://github.com/cowboyd/less.rb"
+  s.homepage    = "http://lesscss.org"
   s.summary     = %q{Leaner CSS, in your browser or Ruby (via less.js)}
-  s.description = %q{Invoke the Less CSS compiler from Ruby (http://lesscss.org)}
+  s.description = %q{Invoke the Less CSS compiler from Ruby}
 
   s.rubyforge_project = "less"
 
