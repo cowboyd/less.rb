@@ -1,3 +1,5 @@
 #!/usr/bin/env ruby
 
-puts "yeah."
+
+puts "#{File.basename($0)}: command line invocation is not currently supported"
+puts "  Pull requests welcome! https://github.com/cowboyd/less.rb"
