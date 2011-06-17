@@ -1,9 +1,29 @@
 
-require 'v8'
-
 module Less
-  class Parser
 
+  # Utility for calling into the JavaScript runtime.
+  module CallJS
+
+    # @private
+    # Wrap JavaScript invocations with uniform error handling
+    #
+    # @yield code to wrap
+    def calljs
+      yield
+    rescue V8::JSError => e
+      raise ParseError.new(e)
+    end
+  end
+
+  # Convert lesscss source into an abstract syntax Tree
+  class Parser
+    include CallJS
+
+    # Construct and configure new Less::Parser
+    #
+    # @param [Hash] opts configuration options
+    # @option opts [Array] :paths a list of directories to search when handling \@import statements
+    # @option opts [String] :filename to associate with resulting parse trees (useful for generating errors)
     def initialize(options = {})
       stringy = {}
       options.each do |k,v|
@@ -12,33 +32,53 @@ module Less
       @parser = Less.Parser.new(stringy)
     end
 
+    # Convert `less` source into a abstract syntaxt tree
+    # @param [String] less the source to parse
+    # @return [Less::Tree] the parsed tree
     def parse(less)
-      error,tree = nil
-      @parser.parse(less, lambda {|e, t| error = e; tree = t})
-      return Tree.new(tree) if tree
-    rescue V8::JSError => e
-      raise ParseError.new(e)
+      calljs do
+        error,tree = nil
+        @parser.parse(less, lambda {|e, t|
+          error = e; tree = t
+        })
+        Tree.new(tree) if tree
+      end
     end
-
   end
 
+  # Abstract LessCSS syntax tree Less. Mainly used to emit CSS
   class Tree
+    include CallJS
+    # Create a tree from a native javascript object.
+    # @param [V8::Object] tree the native less.js tree
     def initialize(tree)
       @tree = tree
     end
 
+    # Serialize this tree into CSS.
+    # By default this will be in pretty-printed form.
+    # @param [Hash] opts modifications to the output
+    # @option opts [Boolean] :compress minify output instead of pretty-printing
     def to_css(options = {})
-      @tree.toCSS(options)
+      calljs do
+        @tree.toCSS(options)
+      end
     end
   end
-  
+
+  # Thrown whenever an error occurs parsing
+  # and/or serializing less source. It is intended
+  # to wrap a native V8::JSError
   class ParseError < StandardError
-    
+
+    # Copies over `error`'s message and backtrace
+    # @param [V8::JSError] error native error
     def initialize(error)
       super(error.message)
       @backtrace = error.backtrace
     end
-  
+
+    # @return [Array] the backtrace frames
     def backtrace
       @backtrace
     end
