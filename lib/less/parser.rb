@@ -9,9 +9,31 @@ module Less
     #
     # @yield code to wrap
     def calljs
-      yield
+      lock do
+        yield
+      end
     rescue V8::JSError => e
       raise ParseError.new(e)
+    end
+
+    # @private
+    # Ensure proper locking before entering the V8 API
+    #
+    # @yield code to wrap in lock
+    def lock
+      result, exception = nil, nil
+      V8::C::Locker() do
+        begin
+          result = yield
+        rescue Exception => e
+          exception = e
+        end
+      end
+      if exception
+        raise exception
+      else
+        result
+      end
     end
   end
 
@@ -29,7 +51,9 @@ module Less
       options.each do |k,v|
         stringy[k.to_s] = v.is_a?(Array) ? v.map(&:to_s) : v.to_s
       end
-      @parser = Less.Parser.new(stringy)
+      lock do
+        @parser = Less.Parser.new(stringy)
+      end
     end
 
     # Convert `less` source into a abstract syntaxt tree

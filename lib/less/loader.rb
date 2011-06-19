@@ -1,17 +1,20 @@
 
 module Less
   class Loader
-    
+    include CallJS
+
     def initialize
-      @cxt = V8::Context.new
-      @path = Pathname(__FILE__).dirname.join('js','lib')
-      @exports = {
-        "path" => Path.new,
-        "sys" => Sys.new,
-        "fs" => Fs.new
-      }
-      @process = Process.new
-      @cxt['console'] = Console.new
+      lock do
+        @cxt = V8::Context.new
+        @path = Pathname(__FILE__).dirname.join('js','lib')
+        @exports = {
+          "path" => Path.new,
+          "sys" => Sys.new,
+          "fs" => Fs.new
+        }
+        @process = Process.new
+        @cxt['console'] = Console.new
+      end
     end
     
     def require(path)
@@ -19,9 +22,11 @@ module Less
         filename = path =~ /\.js$/ ? path : "#{path}.js"
         filepath = @path.join(filename)
         fail LoadError, "no such file: #{filename}" unless filepath.exist?
-        load = @cxt.eval("(function(process, require, exports, __dirname) {require.paths = [];#{File.read(filepath)}})", filepath.expand_path)
-        @exports[path] = exports = @cxt['Object'].new
-        load.call(@process, method(:require), exports, Dir.pwd)
+        lock do
+          load = @cxt.eval("(function(process, require, exports, __dirname) {require.paths = [];#{File.read(filepath)}})", filepath.expand_path)
+          @exports[path] = exports = @cxt['Object'].new
+          load.call(@process, method(:require), exports, Dir.pwd)
+        end
       end
       return exports
     end
