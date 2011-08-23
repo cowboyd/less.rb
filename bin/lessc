@@ -20,5 +20,5 @@ else
   doc = ARGF.read
   parser = Less::Parser.new
   tree = parser.parse(doc)
-  tree.to_css(:compress => true)
+  puts tree.to_css(:compress => true)
 end
