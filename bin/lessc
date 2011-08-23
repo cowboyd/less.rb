@@ -1,5 +1,24 @@
 #!/usr/bin/env ruby
 
+require 'less'
 
-puts "#{File.basename($0)}: command line invocation is not currently supported"
-puts "  Pull requests welcome! https://github.com/cowboyd/less.rb"
+# This file is inspired by / based off of http://ozmm.org/posts/argf.html
+
+def help
+  puts <<-help
+Usage:
+  $ lessc < style.less
+  $ lessc file1.less file2.less
+help
+end
+
+# First off, let's show help some help if no arguments and tty
+if ($stdin.tty? && ARGV.empty?) || ARGV.delete('-h') || ARGV.delete('--help')
+  help
+else
+  # Well, lets read those files
+  doc = ARGF.read
+  parser = Less::Parser.new
+  tree = parser.parse(doc)
+  tree.to_css(:compress => true)
+end
