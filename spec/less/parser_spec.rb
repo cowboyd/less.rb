@@ -18,10 +18,25 @@ describe Less::Parser do
     expect {subject.parse('{^)')}.should raise_error(Less::ParseError)
   end
 
-  describe "when configured with mulitple load paths" do
+  describe "when configured with multiple load paths" do
     before {@parser = Less::Parser.new :paths => [cwd.join('one'), cwd.join('two')]}
 
     it "will load files from both paths" do
+      @parser.parse('@import "one.less";').to_css.gsub(/\n/,'').strip.should eql ".one {  width: 1;}"
+      @parser.parse('@import "two.less";').to_css.gsub(/\n/,'').strip.should eql ".two {  width: 1;}"
+    end
+  end
+
+  describe "when load paths are specified in as default options" do
+    before do
+      Less::DEFAULT_OPTIONS[:paths].tap do |paths|
+        paths << cwd.join('one')
+        paths << cwd.join('two')
+      end
+      @parser = Less::Parser.new
+    end
+
+    it "will load files from default load paths" do
       @parser.parse('@import "one.less";').to_css.gsub(/\n/,'').strip.should eql ".one {  width: 1;}"
       @parser.parse('@import "two.less";').to_css.gsub(/\n/,'').strip.should eql ".two {  width: 1;}"
     end

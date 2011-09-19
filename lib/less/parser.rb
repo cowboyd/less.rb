@@ -48,7 +48,7 @@ module Less
     # @option opts [String] :filename to associate with resulting parse trees (useful for generating errors)
     def initialize(options = {})
       stringy = {}
-      options.each do |k,v|
+      DEFAULT_OPTIONS.merge(options).each do |k,v|
         stringy[k.to_s] = v.is_a?(Array) ? v.map(&:to_s) : v.to_s
       end
       lock do
