@@ -1,13 +1,11 @@
+require 'v8'
+require 'pathname'
+require 'less/parser'
+require 'less/loader'
+require 'less/version'
+require 'less/defaults'
 
 module Less
-
-  require 'v8'
-  require 'pathname'
-  require 'less/parser'
-  require 'less/loader'
-  require 'less/version'
-  require 'less/defaults'
-
   extend Less::Defaults
 
   @loader = Less::Loader.new
