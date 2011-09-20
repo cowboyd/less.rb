@@ -8,10 +8,9 @@ module Less
   require 'less/parser'
   require 'less/loader'
   require 'less/version'
+  require 'less/defaults'
 
-  DEFAULT_OPTIONS = {
-    :paths => []
-  }
+  extend Less::Defaults
 
   @loader = Less::Loader.new
   @less = @loader.require('less/index')

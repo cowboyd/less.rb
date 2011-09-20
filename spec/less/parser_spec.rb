@@ -29,11 +29,12 @@ describe Less::Parser do
 
   describe "when load paths are specified in as default options" do
     before do
-      Less::DEFAULT_OPTIONS[:paths].tap do |paths|
-        paths << cwd.join('one')
-        paths << cwd.join('two')
-      end
+      Less.paths << cwd.join('one')
+      Less.paths << cwd.join('two')
       @parser = Less::Parser.new
+    end
+    after do
+      Less.paths.clear
     end
 
     it "will load files from default load paths" do
