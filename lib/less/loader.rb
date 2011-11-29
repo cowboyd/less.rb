@@ -4,6 +4,8 @@ module Less
   class Loader
     include CallJS
 
+    attr_reader :environment
+
     def initialize
       @cxt = V8::Context.new
       @environment = CommonJS::Environment.new(@cxt, :path => Pathname(__FILE__).dirname.join('js','lib').to_s)
