@@ -1,3 +1,3 @@
 module Less
-  VERSION = '2.0.8beta2'
+  VERSION = '2.0.8'
 end
