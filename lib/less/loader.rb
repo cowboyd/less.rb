@@ -29,6 +29,10 @@ module Less
       def dirname(path)
         File.dirname(path)
       end
+
+      def basename(path)
+        File.basename(path)
+      end
     end
 
     class Sys
