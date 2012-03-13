@@ -14,8 +14,25 @@ describe Less::Parser do
       subject.parse(".class {width: 1+1}").to_css(:compress => true).strip.should eql ".class{width:2;}"
     end
   end
+
   it "throws a ParseError if the lesscss is bogus" do
     expect {subject.parse('{^)')}.should raise_error(Less::ParseError)
+  end
+
+  it "passes exceptions from the less compiler" do
+    parser = Less::Parser.new
+
+    expect do
+      parser.parse('body { color: @a; }').to_css
+    end.should raise_error(Less::ParseError, /variable @a is undefined/)
+  end
+
+  it "passes exceptions from less imported less files" do
+    parser = Less::Parser.new :paths => [cwd.join('faulty')], :filename => "generic.less"
+
+    expect do
+      parser.parse('@import "faulty.less";').to_css
+    end.should raise_error(Less::ParseError, /variable @a is undefined/)
   end
 
   describe "when configured with multiple load paths" do
