@@ -20,28 +20,21 @@ describe Less::Parser do
   end
 
   it "passes exceptions from the less compiler" do
-    parser = Less::Parser.new
-
-    expect do
-      parser.parse('body { color: @a; }').to_css
-    end.should raise_error(Less::ParseError, /variable @a is undefined/)
-  end
-
-  it "passes exceptions from less imported less files" do
-    parser = Less::Parser.new :paths => [cwd.join('faulty')], :filename => "generic.less"
-
-    expect do
-      parser.parse('@import "faulty.less";').to_css
-    end.should raise_error(Less::ParseError, /variable @a is undefined/)
+    expect {subject.parse('body { color: @a; }').to_css}.should raise_error(Less::ParseError, /variable @a is undefined/)
   end
 
   describe "when configured with multiple load paths" do
-    before {@parser = Less::Parser.new :paths => [cwd.join('one'), cwd.join('two')]}
+    subject {Less::Parser.new :paths => [cwd.join('one'), cwd.join('two'), cwd.join('faulty')]}
 
     it "will load files from both paths" do
-      @parser.parse('@import "one.less";').to_css.gsub(/\n/,'').strip.should eql ".one {  width: 1;}"
-      @parser.parse('@import "two.less";').to_css.gsub(/\n/,'').strip.should eql ".two {  width: 1;}"
+      subject.parse('@import "one.less";').to_css.gsub(/\n/,'').strip.should eql ".one {  width: 1;}"
+      subject.parse('@import "two.less";').to_css.gsub(/\n/,'').strip.should eql ".two {  width: 1;}"
     end
+
+    it "passes exceptions from less imported less files" do
+      expect {subject.parse('@import "faulty.less";').to_css}.should raise_error(Less::ParseError, /variable @a is undefined/)
+    end
+
   end
 
   describe "when load paths are specified in as default options" do
