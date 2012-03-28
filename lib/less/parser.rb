@@ -61,9 +61,15 @@ module Less
     # @return [Less::Tree] the parsed tree
     def parse(less)
       calljs do
-        error,tree = nil
-        @parser.parse(less, lambda {|e, t|
-          error = e; tree = t
+        tree = nil
+        @parser.parse(less, lambda {|*args|
+          if V8::VERSION >= '0.10'
+            this, e, t = *args
+          else
+            e, t = *args
+          end
+          fail e.message unless e.nil?
+          tree = t
         })
         Tree.new(tree) if tree
       end
