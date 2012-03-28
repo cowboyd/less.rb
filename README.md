@@ -38,4 +38,4 @@ less.rb is licensed under the same terms as less.js
 See `lib/js/LICENSE` file.
 
 
-> copyright 2011 Charles Lowell
+> copyright 2011,2012 Charles Lowell
