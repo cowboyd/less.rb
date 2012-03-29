@@ -63,22 +63,12 @@ module Less
       calljs do
         tree = nil
         @parser.parse(less, lambda {|*args|
-          if passes_this_argument?
-            this, e, t = *args
-          else
-            e, t = *args
-          end
+          this, e, t = *args
           fail e.message unless e.nil?
           tree = t
         })
         Tree.new(tree) if tree
       end
-    end
-
-    private
-
-    def passes_this_argument?
-      defined? V8::Context::passes_this_argument?
     end
   end
 
