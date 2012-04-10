@@ -2,12 +2,22 @@ module Less
   
   class Error < ::StandardError
     
-    def initialize(cause)
+    def initialize(cause, value = nil)
+      @value = value
+      message = nil
+      if @value # 2 args passed
+        message = @value['message']
+      else # allow passing only value as first arg cause :
+        if cause.respond_to?(:'[]') && message = cause['message']
+          @value = cause
+        end
+      end
+      
       if cause.is_a?(::Exception)
         @cause = cause
-        super(cause.message)
+        super(message || cause.message)
       else
-        super(cause)
+        super(message || cause)
       end
     end
     
@@ -17,6 +27,11 @@ module Less
     
     def backtrace
       @cause ? @cause.backtrace : super
+    end
+
+    # function LessError(e, env) { ... }
+    %w{ type filename index line stack column extract }.each do |key|
+      class_eval "def #{key}; @value && @value['#{key}']; end"
     end
     
   end

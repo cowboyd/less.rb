@@ -10,6 +10,21 @@ if Rhino::VERSION < '1.73.1'
   raise LoadError, "expected gem 'therubyrhino' '>= 1.73.1' but got '#{Rhino::VERSION}'"
 end
 
+# make sure we have JSError#value :
+unless Rhino::JSError.instance_methods(false).find { |m| m.to_sym == :value }
+  Rhino::JSError.class_eval do
+    def value
+      if cause.respond_to?(:value) # e.g. JavaScriptException.getValue
+        cause.value
+      elsif ( unwrap = self.unwrap ) && unwrap.respond_to?(:value)
+        unwrap.value
+      else
+        nil
+      end
+    end
+  end
+end
+
 module Less
   module JavaScript
     class RhinoContext
@@ -63,10 +78,13 @@ module Less
       private
       
         def handle_js_error(e)
-          if e.cause && e.cause.is_a?(Rhino::JS::JavaScriptException)
-            raise Less::ParseError.new(e)
+          if e.value && e.value['type'] # LessError
+            raise Less::ParseError.new(e, e.value)
           end
-          if e.message == "syntax error"
+          if e.unwrap.to_s == "missing closing `}`"
+            raise Less::ParseError.new(e.unwrap.to_s)
+          end
+          if e.message && e.message[0, 12] == "Syntax Error"
             raise Less::ParseError.new(e)
           else
             raise Less::Error.new(e)
