@@ -1,18 +1,22 @@
-require 'v8'
-require 'pathname'
-require 'less/parser'
-require 'less/loader'
-require 'less/version'
+
 require 'less/defaults'
+require 'less/errors'
+require 'less/loader'
+require 'less/parser'
+require 'less/version'
+require 'less/java_script'
 
 module Less
   extend Less::Defaults
+  
+  LESS = Less::Loader.new.require('index') # 'less/index'
 
-  @loader = Less::Loader.new
-  @less = @loader.require('less/index')
-
+  def self.[](name)
+    LESS[name]
+  end
+  
   def self.Parser
-    @less['Parser']
+    self['Parser']
   end
 
 end
