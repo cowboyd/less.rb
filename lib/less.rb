@@ -12,7 +12,7 @@ module Less
   # NOTE: keep the @loader as less-rails depends on 
   # it as it overrides some less/tree.js functions!
   @loader = Less::Loader.new
-  @less = @loader.require('index') # 'less/index'
+  @less = @loader.require('less/index')
 
   def self.[](name)
     @less[name]
