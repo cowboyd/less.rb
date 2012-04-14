@@ -9,10 +9,13 @@ require 'less/java_script'
 module Less
   extend Less::Defaults
   
-  LESS = Less::Loader.new.require('index') # 'less/index'
+  # NOTE: keep the @loader as less-rails depends on 
+  # it as it overrides some less/tree.js functions!
+  @loader = Less::Loader.new
+  @less = @loader.require('index') # 'less/index'
 
   def self.[](name)
-    LESS[name]
+    @less[name]
   end
   
   def self.Parser
