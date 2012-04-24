@@ -22,9 +22,13 @@ module Less
     def parse(less)
       error, tree = nil, nil
       Less::JavaScript.exec do
-        @parser.parse(less, lambda { |*args|
-          args.shift if passed_this_argument?(args)
-          error, tree = *args
+        @parser.parse(less, lambda { |*args| # (error, tree)
+          # v8 >= 0.10 passes this as first arg :
+          if args.size > 2
+            error, tree = args[-2], args[-1]
+          else
+            error, tree = *args
+          end
           fail error.message unless error.nil?
         })
       end
@@ -32,10 +36,6 @@ module Less
     end
     
     private
-
-    def passed_this_argument?(args)
-      args && defined? V8::Context
-    end
     
     # Abstract LessCSS syntax tree Less. Mainly used to emit CSS
     class Tree
