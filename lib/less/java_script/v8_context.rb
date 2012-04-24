@@ -9,7 +9,6 @@ require 'pathname'
 
 module Less
   module JavaScript
-    
     class V8Context
 
       def self.instance
@@ -23,6 +22,10 @@ module Less
         end
       end
 
+      def unwrap
+        @v8_context
+      end
+      
       def exec(&block)
         lock(&block)
       end
@@ -43,6 +46,14 @@ module Less
         end
       end
 
+      def method_missing(symbol, *args)
+        if @v8_context.respond_to?(symbol)
+          @v8_context.send(symbol, *args)
+        else
+          super
+        end
+      end
+      
       private
       
         def lock(&block)

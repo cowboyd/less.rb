@@ -1,4 +1,5 @@
 require 'pathname'
+require 'commonjs'
 
 module Less
   class Loader
@@ -6,47 +7,19 @@ module Less
     attr_reader :environment
     
     def initialize
-      @path = Pathname(__FILE__).dirname.join('js', 'lib')
-      @current_path = @path
-      @exports = { # 'modules' required by less.js :
-        "path" => Path.new, "util" => Sys.new, "fs" => Fs.new, 
-      }
-      @export_paths = {}
-      @requires = {}
-      @process = Process.new
-      @context = Less::JavaScript.context_class.new # 'console' => Console
-      
-      @exports.each do |name, export| 
-        @exports[name] = @context.wrap(export)
-      end if @context.respond_to?(:wrap)
+      context_wrapper = Less::JavaScript.context_wrapper.instance
+      @context = context_wrapper.unwrap
+      @context['process'] = Process.new
+      @context['console'] = Console.new
+      path = Pathname(__FILE__).dirname.join('js', 'lib')
+      @environment = CommonJS::Environment.new(@context, :path => path.to_s)
+      @environment.native('path', Path.new)
+      @environment.native('util', Sys.new)
+      @environment.native('fs', Fs.new)
     end
-
-    def require(id)
-      id = id[0...-3] if id =~ /\.js$/
-      
-      if exports = @exports[id.freeze]
-        @current_path = @export_paths[id] if @export_paths[id]
-      else
-        filepath = @path.join(filename = "#{id}.js")
-        unless filepath.exist?
-          filepath = @current_path.join(filename)
-          fail LoadError, "no such file: #{filename}" unless filepath.exist?
-        end
-
-        @export_paths[id] = @current_path = filepath.dirname
-        
-        # aliasing e.g. require './tree' and
-        # than in a subdir require '../tree'
-        if req_id = @requires[filepath]
-          return @exports[id] = @exports[req_id]
-        end
-        @requires[filepath] = id
-        
-        @exports[id] = exports = @context.eval("{}")
-        load_js = "( function(process, require, exports, __dirname) { require.paths = []; #{File.read(filepath)} } )"
-        @context.call(load_js, @process, method(:require), exports, @current_path.to_s, :source_name => filepath.expand_path.to_s)
-      end
-      exports
+    
+    def require(module_id)
+      @environment.require(module_id)
     end
     
     # stubbed JS modules required by less.js

@@ -6,23 +6,8 @@ rescue LoadError => e
 end
 
 require 'rhino/version'
-if Rhino::VERSION < '1.73.1'
-  raise LoadError, "expected gem 'therubyrhino' '>= 1.73.1' but got '#{Rhino::VERSION}'"
-end
-
-# make sure we have JSError#value :
-unless Rhino::JSError.instance_methods(false).find { |m| m.to_sym == :value }
-  Rhino::JSError.class_eval do
-    def value
-      if cause.respond_to?(:value) # e.g. JavaScriptException.getValue
-        cause.value
-      elsif ( unwrap = self.unwrap ) && unwrap.respond_to?(:value)
-        unwrap.value
-      else
-        nil
-      end
-    end
-  end
+if Rhino::VERSION < '1.73.3'
+  raise LoadError, "expected gem 'therubyrhino' '>= 1.73.3' but got '#{Rhino::VERSION}'"
 end
 
 module Less
@@ -45,6 +30,10 @@ module Less
         globals.each { |key, val| @rhino_context[key] = val } if globals
       end
 
+      def unwrap
+        @rhino_context
+      end
+      
       def exec(&block)
         @rhino_context.open(&block)
       rescue Rhino::JSError => e
@@ -70,9 +59,13 @@ module Less
       rescue Rhino::JSError => e
         handle_js_error(e)
       end
-
-      def wrap(rb_object)
-        Rhino::Ruby::Object.wrap(rb_object)
+      
+      def method_missing(symbol, *args)
+        if @rhino_context.respond_to?(symbol)
+          @rhino_context.send(symbol, *args)
+        else
+          super
+        end
       end
       
       private
