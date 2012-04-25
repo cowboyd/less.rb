@@ -26,6 +26,9 @@ module Less
           # v8 >= 0.10 passes this as first arg :
           if args.size > 2
             error, tree = args[-2], args[-1]
+          elsif args.last.respond_to?(:message) && args.last.message
+            # might get invoked as callback(error)
+            error = args.last
           else
             error, tree = *args
           end

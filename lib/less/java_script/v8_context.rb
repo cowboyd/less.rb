@@ -59,11 +59,28 @@ module Less
         def lock(&block)
           do_lock(&block)
         rescue V8::JSError => e
-          if e.value["name"] == "SyntaxError" || e.in_javascript?
-            raise Less::ParseError.new(e)
-          else
-            raise Less::Error.new(e)
+          if e.in_javascript?
+            js_value = e.value.respond_to?(:'[]')
+            name = js_value && e.value["name"]
+            constructor = js_value && e.value['constructor']
+            if name == "SyntaxError" || 
+                ( constructor && constructor.name == "LessError" )
+              raise Less::ParseError.new(e)
+            end
+          # NOTE: less/parser.js :
+          # 
+          #   error = new(LessError)({
+          #      index: i,
+          #      type: 'Parse',
+          #      message: "missing closing `}`",
+          #      filename: env.filename
+          #   }, env);
+          # 
+          # comes back as value: RuntimeError !
+          elsif e.value.to_s == "missing closing `}`"
+            raise Less::ParseError.new(e.value.to_s)
           end
+          raise Less::Error.new(e)
         end
       
         def do_lock

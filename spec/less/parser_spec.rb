@@ -19,6 +19,10 @@ describe Less::Parser do
     end
   end
 
+  it "throws a ParseError if the lesscss is bogus" do
+    expect { subject.parse('{^)') }.should raise_error(Less::ParseError, /missing closing `\}`/)
+  end
+
   it "passes exceptions from the less compiler" do
     expect { subject.parse('body { color: @a; }').to_css }.should raise_error(Less::ParseError, /variable @a is undefined/)
   end
