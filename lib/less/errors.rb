@@ -30,8 +30,11 @@ module Less
     end
 
     # function LessError(e, env) { ... }
-    %w{ type filename index line stack column extract }.each do |key|
+    %w{ type filename stack extract }.each do |key|
       class_eval "def #{key}; @value && @value['#{key}']; end"
+    end
+    %w{ index line column }.each do |key|
+      class_eval "def #{key}; @value && @value['#{key}'].to_i; end"
     end
     
   end

@@ -65,7 +65,7 @@ module Less
             constructor = js_value && e.value['constructor']
             if name == "SyntaxError" || 
                 ( constructor && constructor.name == "LessError" )
-              raise Less::ParseError.new(e)
+              raise Less::ParseError.new(e, js_value ? e.value : nil)
             end
           # NOTE: less/parser.js :
           # 
