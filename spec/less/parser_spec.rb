@@ -19,6 +19,10 @@ describe Less::Parser do
     end
   end
 
+  it "throws a ParseError if the lesscss is bogus" do
+    expect { subject.parse('{^)') }.should raise_error(Less::ParseError, /missing closing `\}`/)
+  end
+
   it "passes exceptions from the less compiler" do
     expect { subject.parse('body { color: @a; }').to_css }.should raise_error(Less::ParseError, /variable @a is undefined/)
   end
@@ -35,6 +39,19 @@ describe Less::Parser do
       expect { subject.parse('@import "faulty.less";').to_css }.should raise_error(Less::ParseError, /variable @a is undefined/)
     end
 
+    it "reports type, line, column and filename of (parse) error" do
+      begin
+        subject.parse('@import "faulty.less";').to_css
+      rescue Less::ParseError => e
+        e.type.should == 'Name'
+        e.filename.should == cwd.join('faulty/faulty.less').to_s
+        e.line.should == 1
+        e.column.should == 16
+      else
+        fail "parse error not raised"
+      end
+    end
+    
   end
 
   describe "when load paths are specified in as default options" do

@@ -71,8 +71,8 @@ module Less
       private
       
         def handle_js_error(e)
-          if e.value && e.value['type'] # LessError
-            raise Less::ParseError.new(e, e.value)
+          if e.value && ( e.value['message'] || e.value['type'].is_a?(String) )
+            raise Less::ParseError.new(e, e.value) # LessError
           end
           if e.unwrap.to_s == "missing closing `}`"
             raise Less::ParseError.new(e.unwrap.to_s)
