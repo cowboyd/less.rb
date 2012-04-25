@@ -3,7 +3,11 @@ require 'spec_helper'
 describe Less::Parser do
 
   cwd = Pathname(__FILE__).dirname
-
+  
+  it "instantiates" do
+    expect { Less::Parser.new }.should_not raise_error
+  end
+  
   describe "simple usage" do
     it "parse less into a tree" do
       root = subject.parse(".class {width: 1+1}")
@@ -15,16 +19,12 @@ describe Less::Parser do
     end
   end
 
-  it "throws a ParseError if the lesscss is bogus" do
-    expect {subject.parse('{^)')}.should raise_error(Less::ParseError)
-  end
-
   it "passes exceptions from the less compiler" do
-    expect {subject.parse('body { color: @a; }').to_css}.should raise_error(Less::ParseError, /variable @a is undefined/)
+    expect { subject.parse('body { color: @a; }').to_css }.should raise_error(Less::ParseError, /variable @a is undefined/)
   end
 
   describe "when configured with multiple load paths" do
-    subject {Less::Parser.new :paths => [cwd.join('one'), cwd.join('two'), cwd.join('faulty')]}
+    subject { Less::Parser.new :paths => [ cwd.join('one'), cwd.join('two'), cwd.join('faulty') ] } 
 
     it "will load files from both paths" do
       subject.parse('@import "one.less";').to_css.gsub(/\n/,'').strip.should eql ".one {  width: 1;}"
@@ -32,7 +32,7 @@ describe Less::Parser do
     end
 
     it "passes exceptions from less imported less files" do
-      expect {subject.parse('@import "faulty.less";').to_css}.should raise_error(Less::ParseError, /variable @a is undefined/)
+      expect { subject.parse('@import "faulty.less";').to_css }.should raise_error(Less::ParseError, /variable @a is undefined/)
     end
 
   end

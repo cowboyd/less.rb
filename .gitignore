@@ -4,3 +4,4 @@
 *.rbc
 .yardoc
 Gemfile.lock
+nbproject

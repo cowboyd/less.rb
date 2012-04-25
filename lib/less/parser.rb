@@ -1,45 +1,7 @@
-
 module Less
-
-  # Utility for calling into the JavaScript runtime.
-  module CallJS
-
-    # @private
-    # Wrap JavaScript invocations with uniform error handling
-    #
-    # @yield code to wrap
-    def calljs
-      lock do
-        yield
-      end
-    rescue V8::JSError => e
-      raise ParseError.new(e)
-    end
-
-    # @private
-    # Ensure proper locking before entering the V8 API
-    #
-    # @yield code to wrap in lock
-    def lock
-      result, exception = nil, nil
-      V8::C::Locker() do
-        begin
-          result = yield
-        rescue Exception => e
-          exception = e
-        end
-      end
-      if exception
-        raise exception
-      else
-        result
-      end
-    end
-  end
-
+  
   # Convert lesscss source into an abstract syntax Tree
   class Parser
-    include CallJS
 
     # Construct and configure new Less::Parser
     #
@@ -51,62 +13,49 @@ module Less
       Less.defaults.merge(options).each do |k,v|
         stringy[k.to_s] = v.is_a?(Array) ? v.map(&:to_s) : v.to_s
       end
-      lock do
-        @parser = Less.Parser.new(stringy)
-      end
+      @parser = Less::JavaScript.exec { Less['Parser'].new(stringy) }
     end
 
     # Convert `less` source into a abstract syntaxt tree
     # @param [String] less the source to parse
     # @return [Less::Tree] the parsed tree
     def parse(less)
-      calljs do
-        tree = nil
-        @parser.parse(less, lambda {|*args|
-          this, e, t = *args
-          fail e.message unless e.nil?
-          tree = t
+      error, tree = nil, nil
+      Less::JavaScript.exec do
+        @parser.parse(less, lambda { |*args| # (error, tree)
+          # v8 >= 0.10 passes this as first arg :
+          if args.size > 2
+            error, tree = args[-2], args[-1]
+          else
+            error, tree = *args
+          end
+          fail error.message unless error.nil?
         })
-        Tree.new(tree) if tree
       end
+      Tree.new(tree) if tree
     end
-  end
+    
+    private
+    
+    # Abstract LessCSS syntax tree Less. Mainly used to emit CSS
+    class Tree
 
-  # Abstract LessCSS syntax tree Less. Mainly used to emit CSS
-  class Tree
-    include CallJS
-    # Create a tree from a native javascript object.
-    # @param [V8::Object] tree the native less.js tree
-    def initialize(tree)
-      @tree = tree
-    end
-
-    # Serialize this tree into CSS.
-    # By default this will be in pretty-printed form.
-    # @param [Hash] opts modifications to the output
-    # @option opts [Boolean] :compress minify output instead of pretty-printing
-    def to_css(options = {})
-      calljs do
-        @tree.toCSS(options)
+      # Create a tree from a native javascript object.
+      # @param [V8::Object] tree the native less.js tree
+      def initialize(tree)
+        @tree = tree
       end
+
+      # Serialize this tree into CSS.
+      # By default this will be in pretty-printed form.
+      # @param [Hash] opts modifications to the output
+      # @option opts [Boolean] :compress minify output instead of pretty-printing
+      def to_css(options = {})
+        Less::JavaScript.exec { @tree.toCSS(options) }
+      end
+      
     end
+    
   end
-
-  # Thrown whenever an error occurs parsing
-  # and/or serializing less source. It is intended
-  # to wrap a native V8::JSError
-  class ParseError < StandardError
-
-    # Copies over `error`'s message and backtrace
-    # @param [V8::JSError] error native error
-    def initialize(error)
-      super(error.message)
-      @backtrace = error.backtrace
-    end
-
-    # @return [Array] the backtrace frames
-    def backtrace
-      @backtrace
-    end
-  end
+  
 end
