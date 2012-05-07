@@ -37,6 +37,10 @@ module Less
       end
       Tree.new(tree) if tree
     end
+
+    def imports
+      Less::JavaScript.exec { @parser.imports.files.map{|file| file} }
+    end
     
     private
     

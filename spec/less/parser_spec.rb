@@ -3,11 +3,11 @@ require 'spec_helper'
 describe Less::Parser do
 
   cwd = Pathname(__FILE__).dirname
-  
+
   it "instantiates" do
     expect { Less::Parser.new }.should_not raise_error
   end
-  
+
   describe "simple usage" do
     it "parse less into a tree" do
       root = subject.parse(".class {width: 1+1}")
@@ -28,7 +28,7 @@ describe Less::Parser do
   end
 
   describe "when configured with multiple load paths" do
-    subject { Less::Parser.new :paths => [ cwd.join('one'), cwd.join('two'), cwd.join('faulty') ] } 
+    subject { Less::Parser.new :paths => [ cwd.join('one'), cwd.join('two'), cwd.join('faulty') ] }
 
     it "will load files from both paths" do
       subject.parse('@import "one.less";').to_css.gsub(/\n/,'').strip.should eql ".one {  width: 1;}"
@@ -37,6 +37,13 @@ describe Less::Parser do
 
     it "passes exceptions from less imported less files" do
       expect { subject.parse('@import "faulty.less";').to_css }.should raise_error(Less::ParseError, /variable @a is undefined/)
+    end
+
+    it "will track imported files" do
+      subject.parse('@import "one.less";')
+      subject.parse('@import "two.less";')
+      subject.imports.should include("one.less")
+      subject.imports.should include("two.less")
     end
 
     it "reports type, line, column and filename of (parse) error" do
@@ -51,7 +58,7 @@ describe Less::Parser do
         fail "parse error not raised"
       end
     end
-    
+
   end
 
   describe "when load paths are specified in as default options" do
