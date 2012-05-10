@@ -1,5 +1,5 @@
 module Less
-  
+
   # Convert lesscss source into an abstract syntax Tree
   class Parser
 
@@ -39,11 +39,11 @@ module Less
     end
 
     def imports
-      Less::JavaScript.exec { @parser.imports.files.map{|file| file} }
+      Less::JavaScript.exec { @parser.imports.files.map{|file, _| file} }
     end
-    
+
     private
-    
+
     # Abstract LessCSS syntax tree Less. Mainly used to emit CSS
     class Tree
 
@@ -60,9 +60,9 @@ module Less
       def to_css(options = {})
         Less::JavaScript.exec { @tree.toCSS(options) }
       end
-      
+
     end
-    
+
   end
-  
+
 end
