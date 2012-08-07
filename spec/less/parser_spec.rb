@@ -5,7 +5,7 @@ describe Less::Parser do
   cwd = Pathname(__FILE__).dirname
 
   it "instantiates" do
-    expect { Less::Parser.new }.should_not raise_error
+    lambda { Less::Parser.new }.should_not raise_error
   end
 
   describe "simple usage" do
@@ -20,11 +20,11 @@ describe Less::Parser do
   end
 
   it "throws a ParseError if the lesscss is bogus" do
-    expect { subject.parse('{^)') }.should raise_error(Less::ParseError, /missing closing `\}`/)
+    lambda { subject.parse('{^)') }.should raise_error(Less::ParseError, /missing closing `\}`/)
   end
 
   it "passes exceptions from the less compiler" do
-    expect { subject.parse('body { color: @a; }').to_css }.should raise_error(Less::ParseError, /variable @a is undefined/)
+    lambda { subject.parse('body { color: @a; }').to_css }.should raise_error(Less::ParseError, /variable @a is undefined/)
   end
 
   describe "when configured with multiple load paths" do
@@ -36,7 +36,7 @@ describe Less::Parser do
     end
 
     it "passes exceptions from less imported less files" do
-      expect { subject.parse('@import "faulty.less";').to_css }.should raise_error(Less::ParseError, /variable @a is undefined/)
+      lambda { subject.parse('@import "faulty.less";').to_css }.should raise_error(Less::ParseError, /variable @a is undefined/)
     end
 
     it "will track imported files" do
@@ -76,5 +76,5 @@ describe Less::Parser do
       @parser.parse('@import "two.less";').to_css.gsub(/\n/,'').strip.should eql ".two {  width: 1;}"
     end
   end
-
+  
 end
