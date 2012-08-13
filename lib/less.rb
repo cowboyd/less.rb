@@ -18,8 +18,15 @@ module Less
     @less[name]
   end
   
+  # exposes less.Parser
   def self.Parser
     self['Parser']
   end
 
+  # exposes less.tree e.g. for attaching custom functions
+  # Less.tree.functions['foo'] = lambda { |*args| 'bar' }
+  def self.tree
+    self['tree']
+  end
+  
 end
