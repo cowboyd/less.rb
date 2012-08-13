@@ -121,9 +121,11 @@ describe Less::Parser do
       case base_name
         when 'javascript'
           # adjust less .eval line :
+          #   title: `process.title`;
+          # later replaced by line :
           #   title: `typeof process.title`;
           # with something that won't fail (since we're not in Node.JS)
-          less_content.sub!('typeof process.title', 'typeof this.toString()')
+          less_content.sub!('process.title', '"node"')
       end
       
       it "#{base_name}.less" do
