@@ -76,5 +76,66 @@ describe Less::Parser do
       @parser.parse('@import "two.less";').to_css.gsub(/\n/,'').strip.should eql ".two {  width: 1;}"
     end
   end
+
+  # NOTE: runs JS tests from less.js it's a replacement for less-test.js
+  describe "less-test", :integration => true do
+    
+    TEST_LESS_DIR = File.expand_path('../../lib/less/js/test/less', File.dirname(__FILE__))
+    TEST_CSS_DIR =  File.expand_path('../../lib/less/js/test/css' , File.dirname(__FILE__))
+
+    before :all do
+      # functions.less test expects these exposed :
+      Less.tree.functions[:add] = lambda do |*args| # function (a, b)
+        a, b = args[-2], args[-1]
+        Less.tree['Dimension'].new(a['value'] + b['value'])
+        # return new(less.tree.Dimension)(a.value + b.value);
+      end
+      Less.tree.functions[:increment] = lambda do |*args| # function (a)
+        a = args[-1]
+        Less.tree['Dimension'].new(a['value'] + 1)
+        # return new(less.tree.Dimension)(a.value + 1);
+      end
+      Less.tree.functions[:_color] = lambda do |*args| # function (str)
+        str = args[-1]
+        if str.value == 'evil red'
+        # if (str.value === "evil red")
+          Less.tree['Color'].new('600')
+          # return new(less.tree.Color)("600")
+        end
+      end
+    end
+    
+    after :all do
+      Less.tree.functions[:add] = nil
+      Less.tree.functions[:increment] = nil
+      Less.tree.functions[:_color] = nil
+    end
+    
+    Dir.glob(File.join(TEST_LESS_DIR, '*.less')).each do |less_file|
+      
+      base_name = File.basename(less_file, '.less')
+      css_file = File.join(TEST_CSS_DIR, "#{base_name}.css")
+      raise "missing css file: #{css_file}" unless File.exists?(css_file)
+      
+      less_content = File.read(less_file)
+      case base_name
+        when 'javascript'
+          # adjust less .eval line :
+          #   title: `process.title`;
+          # later replaced by line :
+          #   title: `typeof process.title`;
+          # with something that won't fail (since we're not in Node.JS)
+          less_content.sub!('process.title', '"node"')
+      end
+      
+      it "#{base_name}.less" do
+        parser = Less::Parser.new(:paths => [ File.dirname(less_file) ])
+        less = parser.parse( less_content )
+        less.to_css.should == File.read(css_file)
+      end
+      
+    end
+    
+  end
   
 end
