@@ -15,68 +15,79 @@ module Less
       @context['console'] = Console.new
       path = Pathname(__FILE__).dirname.join('js', 'lib')
       @environment = CommonJS::Environment.new(@context, :path => path.to_s)
-      @environment.native('path', Path.new)
-      @environment.native('util', Sys.new)
-      @environment.native('url', Url.new)
-      @environment.native('http', Http.new)
-      @environment.native('fs', Fs.new)
-
+      @environment.native('path', Path)
+      @environment.native('util', Util)
+      @environment.native('fs', FS)
+      @environment.native('url', Url)
+      @environment.native('http', Http)
     end
     
     def require(module_id)
       @environment.require(module_id)
     end
     
-    # stubbed JS modules required by less.js
+    # JS exports (required by less.js) :
     
-    class Path
-      def join(*components)
-        # node.js expands path on join
-        File.expand_path(File.join(*components))
-      end
-
-      def dirname(path)
-        File.dirname(path)
-      end
-
-      def basename(path)
-        File.basename(path)
-      end
-    end
-    
-    class Sys
-      def error(*errors)
-        raise errors.join(' ')
-      end
-    end
-
-    class Fs
-      def statSync(path)
-        File.stat(path)
-      end
-
-      def readFile(path, encoding, callback)
-        callback.call(nil, File.read(path))
-      end
-    end
-
-    class Process
+    class Process # :nodoc:
       def exit(*args)
+        warn("exit(#{args.first}) from #{caller}")
       end
     end
 
-    class Console
+    class Console # :nodoc:
       def log(*msgs)
         puts msgs.join(', ')
       end
     end
+    
+    # stubbed JS modules (required by less.js) :
+    
+    module Path # :nodoc:
+      def self.join(*components)
+        # node.js expands path on join
+        File.expand_path(File.join(*components))
+      end
 
-    class Url
-      def resolve(*args)
+      def self.dirname(path)
+        File.dirname(path)
+      end
+
+      def self.basename(path)
+        File.basename(path)
+      end
+    end
+    
+    module Util # :nodoc:
+      
+      def self.error(*errors)
+        raise errors.join(' ')
+      end
+      
+      def self.puts(*args)
+        args.each { |arg| STDOUT.puts(arg) }
+      end
+      
+    end
+
+    module FS # :nodoc:
+      
+      def self.statSync(path)
+        File.stat(path)
+      end
+
+      def self.readFile(path, encoding, callback)
+        callback.call(nil, File.read(path))
+      end
+      
+    end
+
+    module Url # :nodoc:
+      
+      def self.resolve(*args)
         URI.join(*args)
       end
 
-      def parse(url_string)
+      def self.parse(url_string)
         u = URI.parse(url_string)
         result = {}
         result['protocol'] = u.scheme  + ':' if u.scheme
@@ -88,10 +99,12 @@ module Less
         result['hash']     = '#' + u.fragment if u.fragment
         result
       end
+      
     end
     
-    class Http
-      def get(options, callback)
+    module Http # :nodoc:
+      
+      def self.get(options, callback)
         err = nil
         begin
           #less always sends options as an object, so no need to check for string
@@ -123,51 +136,52 @@ module Less
           http.start do |req|
             response = req.get(uri.to_s)
           end
-          sr = ServerResponse.new(response.read_body, response.code.to_i)
-          callback.call(sr)
+          callback.call ServerResponse.new(response.read_body, response.code.to_i)
         rescue => e
           err = e.message
         ensure
-          ret = HttpNodeObj.new(err)
+          ret = HttpGetResult.new(err)
         end
         ret
       end
-    end
+      
+      class HttpGetResult
+        attr_accessor :err
 
-    class HttpNodeObj
-      attr_accessor :err
+        def initialize(err)
+          @err = err
+        end
 
-      def initialize(err)
-        @err = err
-      end
-
-      def on(event, callback)
-        case event
-        when 'error'
-          callback.call(@err) if @err  #only call when error exists
-        else
-          callback.call()
+        def on(event, callback)
+          case event
+          when 'error'
+            callback.call(@err) if @err  #only call when error exists
+          else
+            callback.call()
+          end
         end
       end
-    end
 
-    class ServerResponse
-      attr_accessor :statusCode
-      attr_accessor :data   #faked because ServerResponse acutally implements WriteableStream
+      class ServerResponse
+        attr_accessor :statusCode
+        attr_accessor :data   #faked because ServerResponse acutally implements WriteableStream
 
-      def initialize(data, status_code)
-        @data = data
-        @statusCode = status_code
-      end
+        def initialize(data, status_code)
+          @data = data
+          @statusCode = status_code
+        end
 
-      def on(event, callback)
-        case event
-        when 'data'
-          callback.call(@data)
-        else
-          callback.call()
+        def on(event, callback)
+          case event
+          when 'data'
+            callback.call(@data)
+          else
+            callback.call()
+          end
         end
       end
+      
     end
+    
   end
 end
