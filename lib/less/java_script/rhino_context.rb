@@ -6,8 +6,8 @@ rescue LoadError => e
 end
 
 require 'rhino/version'
-if Rhino::VERSION < '1.73.3'
-  raise LoadError, "expected gem 'therubyrhino' '>= 1.73.3' but got '#{Rhino::VERSION}'"
+if Rhino::VERSION < '2.0.1'
+  raise LoadError, "expected gem 'therubyrhino' '>= 2.0.1' but got '#{Rhino::VERSION}'"
 end
 
 module Less
