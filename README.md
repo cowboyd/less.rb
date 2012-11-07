@@ -30,6 +30,12 @@ Once you have a parser instantiated, you can parse code to get your AST !
     tree.to_css #=> .class {\n  width: 2;\n}\n
     tree.to_css(:compress => true) #=> .class{width:2;}
 
+tests
+-----
+
+This repository contains less.js as a submodule, so to run the tests, you'll need to grab that code as well. To do that, run `git submodule update --init` from the root directory of the project.
+
+
 license
 -------
 
