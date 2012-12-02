@@ -26,7 +26,7 @@ module Less
         else
           apply_1_8_compatibility!
         end
-        fix_memory_limit! @rhino_context
+        fix_memory_limit! @rhino_context # TODO to be removed if no issues ...
         globals.each { |key, val| @rhino_context[key] = val } if globals
       end
 
@@ -84,13 +84,11 @@ module Less
           end          
         end
       
-        # Disables bytecode compiling which limits you to 64K scripts
+        # Disables byte-code compiling which limits you to 64K scripts
         def fix_memory_limit!(context)
-          if context.respond_to?(:optimization_level=)
-            context.optimization_level = -1
-          else
-            context.instance_eval { @native.setOptimizationLevel(-1) }
-          end
+          # NOTE: does nothing and should be removed however if issues
+          # with Rhino script size arise users could moneky-path like:
+          #context.optimization_level = -1
         end
         
         def apply_1_8_compatibility!
