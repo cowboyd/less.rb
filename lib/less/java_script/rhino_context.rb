@@ -6,8 +6,8 @@ rescue LoadError => e
 end
 
 require 'rhino/version'
-if Rhino::VERSION < '2.0.1'
-  raise LoadError, "expected gem 'therubyrhino' '>= 2.0.1' but got '#{Rhino::VERSION}'"
+if Rhino::VERSION < '2.0.2'
+  raise LoadError, "expected gem 'therubyrhino' '>= 2.0.2' but got '#{Rhino::VERSION}'"
 end
 
 module Less
@@ -26,7 +26,6 @@ module Less
         else
           apply_1_8_compatibility!
         end
-        fix_memory_limit! @rhino_context # TODO to be removed if no issues ...
         globals.each { |key, val| @rhino_context[key] = val } if globals
       end
 
@@ -82,13 +81,6 @@ module Less
           else
             raise Less::Error.new(e)
           end          
-        end
-      
-        # Disables byte-code compiling which limits you to 64K scripts
-        def fix_memory_limit!(context)
-          # NOTE: does nothing and should be removed however if issues
-          # with Rhino script size arise users could moneky-path like:
-          #context.optimization_level = -1
         end
         
         def apply_1_8_compatibility!
