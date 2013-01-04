@@ -1,5 +1,7 @@
 require 'pathname'
 require 'commonjs'
+require 'net/http'
+require 'uri'
 
 module Less
   class Loader
@@ -67,6 +69,45 @@ module Less
         puts msgs.join(', ')
       end
     end
+
+    class Url
+      def resolve(*args)
+        URI.join(*args)
+      end
+
+      def parse(url_string)
+        u = URI.parse(url_string)
+        {'pathname' => u.path, 'host' => u.host, 'port' => u.port}
+      end
+    end
     
+    class Http
+      def get(options, callback)
+        #first arg should actually support an options object, but less.js doesn't rely on this right now
+        raise ArgumentError, 'options argument can currently only be string' if !options.is_string?
+        uri = URI.parse(options)
+        response = Net::HTTP.get_response(uri)
+        ServerResponse.new(response.body, response.status_code)
+      end
+    end
+
+    class ServerResponse
+      attr_accessor :statusCode
+      attr_accessor :data   #faked because ServerResponse acutally implements WriteableStream
+
+      def initialize(data, status_code)
+        @data = data
+        @statusCode = status_code
+      end
+
+      def on(event, callback)
+        case event
+        when 'data'
+          callback.call(@data)
+        when 'end'
+          callback.call()
+        end
+      end
+    end
   end
 end
