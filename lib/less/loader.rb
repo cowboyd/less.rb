@@ -15,7 +15,10 @@ module Less
       @environment = CommonJS::Environment.new(@context, :path => path.to_s)
       @environment.native('path', Path.new)
       @environment.native('util', Sys.new)
+      @environment.native('url', Url.new)
+      @environment.native('http', Http.new)
       @environment.native('fs', Fs.new)
+
     end
     
     def require(module_id)
