@@ -77,8 +77,8 @@ module Less
           #   }, env);
           # 
           # comes back as value: RuntimeError !
-          elsif e.value.to_s == "missing closing `}`"
-            raise Less::ParseError.new(e.value.to_s)
+          elsif e.message == "missing closing `}`"
+            raise Less::ParseError.new(e)
           end
           raise Less::Error.new(e)
         end
