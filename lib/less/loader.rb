@@ -31,7 +31,8 @@ module Less
     
     class Path
       def join(*components)
-        File.join(*components)
+        # node.js expands path on join
+        File.expand_path(File.join(*components))
       end
 
       def dirname(path)

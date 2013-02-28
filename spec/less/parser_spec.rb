@@ -42,8 +42,9 @@ describe Less::Parser do
     it "will track imported files" do
       subject.parse('@import "one.less";')
       subject.parse('@import "two.less";')
-      subject.imports.should include("one.less")
-      subject.imports.should include("two.less")
+      # Parser#imports returns full path names
+      subject.imports.grep(/one\.less$/).should_not be_empty
+      subject.imports.grep(/two\.less$/).should_not be_empty
     end
 
     it "reports type, line, column and filename of (parse) error" do

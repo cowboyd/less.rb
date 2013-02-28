@@ -74,7 +74,7 @@ module Less
           if e.value && ( e.value['message'] || e.value['type'].is_a?(String) )
             raise Less::ParseError.new(e, e.value) # LessError
           end
-          if e.unwrap.to_s == "missing closing `}`"
+          if e.unwrap.to_s =~ /missing closing `}`/
             raise Less::ParseError.new(e.unwrap.to_s)
           end
           if e.message && e.message[0, 12] == "Syntax Error"

@@ -2,7 +2,7 @@ module Less
   module Defaults
 
     def defaults
-      @defaults ||= { :paths => [] }
+      @defaults ||= { :paths => [], :relativeUrls => true }
     end
 
     def paths
