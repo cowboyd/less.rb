@@ -14,7 +14,7 @@ module Less
       def self.instance
         return new
       end
-      
+
       def initialize(globals = nil)
         lock do
           @v8_context = V8::Context.new
@@ -25,7 +25,7 @@ module Less
       def unwrap
         @v8_context
       end
-      
+
       def exec(&block)
         lock(&block)
       end
@@ -53,9 +53,9 @@ module Less
           super
         end
       end
-      
+
       private
-      
+
         def lock(&block)
           do_lock(&block)
         rescue V8::JSError => e
@@ -63,26 +63,26 @@ module Less
             js_value = e.value.respond_to?(:'[]')
             name = js_value && e.value["name"]
             constructor = js_value && e.value['constructor']
-            if name == "SyntaxError" || 
+            if name == "SyntaxError" ||
                 ( constructor && constructor.name == "LessError" )
               raise Less::ParseError.new(e, js_value ? e.value : nil)
             end
           # NOTE: less/parser.js :
-          # 
+          #
           #   error = new(LessError)({
           #      index: i,
           #      type: 'Parse',
           #      message: "missing closing `}`",
           #      filename: env.filename
           #   }, env);
-          # 
+          #
           # comes back as value: RuntimeError !
-          elsif e.message == "missing closing `}`"
-            raise Less::ParseError.new(e)
+          elsif e.value.to_s =~ /missing closing `}`/
+            raise Less::ParseError.new(e.value.to_s)
           end
           raise Less::Error.new(e)
         end
-      
+
         def do_lock
           result, exception = nil, nil
           V8::C::Locker() do
@@ -99,7 +99,7 @@ module Less
             result
           end
         end
-        
+
     end
   end
 end
