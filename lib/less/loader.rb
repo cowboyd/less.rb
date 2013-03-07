@@ -30,7 +30,7 @@ module Less
     
     class Process # :nodoc:
       def exit(*args)
-        warn("exit(#{args.first}) from #{caller}")
+        warn("JS process.exit(#{args.first}) called from: \n#{caller.join("\n")}")
       end
     end
 
