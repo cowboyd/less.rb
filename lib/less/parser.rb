@@ -1,3 +1,5 @@
+require 'pathname'
+
 module Less
 
   # Convert lesscss source into an abstract syntax Tree
@@ -5,15 +7,52 @@ module Less
 
     # Construct and configure new Less::Parser
     #
-    # @param [Hash] opts configuration options
-    # @option opts [Array] :paths a list of directories to search when handling \@import statements
-    # @option opts [String] :filename to associate with resulting parse trees (useful for generating errors)
+    # @param [Hash] options configuration options
+    # @option options [Array] :paths a list of directories to search when handling \@import statements
+    # @option options [String] :filename to associate with resulting parse trees (useful for generating errors)
+    # @option options [TrueClass, FalseClass] :compress
+    # @option options [TrueClass, FalseClass] :strictImports
+    # @option options [TrueClass, FalseClass] :relativeUrls
+    # @option options [TrueClass, FalseClass] :dumpLineNumbers
     def initialize(options = {})
-      stringy = {}
-      Less.defaults.merge(options).each do |k,v|
-        stringy[k.to_s] = v.is_a?(Array) ? v.map(&:to_s) : v.to_s
+      # LeSS supported _env_ options :
+      # 
+      # - paths (unmodified) - paths to search for imports on
+      # - optimization - optimization level (for the chunker)
+      # - mime (browser only) mime type for sheet import
+      # - contents (browser only)
+      # - strictImports
+      # - dumpLineNumbers - whether to dump line numbers
+      # - compress - whether to compress
+      # - processImports - whether to process imports. if false then imports will not be imported
+      # - relativeUrls (true/false) whether to adjust URL's to be relative
+      # - errback (error callback function)
+      # - rootpath string
+      # - entryPath string
+      # - files (internal) - list of files that have been imported, used for import-once
+      # - currentFileInfo (internal) - information about the current file - 
+      #   for error reporting and importing and making urls relative etc :
+      #     this.currentFileInfo = {
+      #        filename: filename,
+      #        relativeUrls: this.relativeUrls,
+      #        rootpath: options.rootpath || "",
+      #        currentDirectory: entryPath,
+      #        entryPath: entryPath,
+      #        rootFilename: filename
+      #     };
+      #
+      env = {}
+      Less.defaults.merge(options).each do |key, val|
+        env[key.to_s] = 
+          case val
+          when Symbol, Pathname then val.to_s
+          when Array
+            val.map!(&:to_s) if key.to_sym == :paths # might contain Pathname-s
+            val # keep the original passed Array
+          else val # true/false/String/Method
+          end
       end
-      @parser = Less::JavaScript.exec { Less['Parser'].new(stringy) }
+      @parser = Less::JavaScript.exec { Less['Parser'].new(env) }
     end
 
     # Convert `less` source into a abstract syntaxt tree
@@ -39,7 +78,7 @@ module Less
     end
 
     def imports
-      Less::JavaScript.exec { @parser.imports.files.map{|file, _| file} }
+      Less::JavaScript.exec { @parser.imports.files.map { |file, _| file } }
     end
 
     private

@@ -78,6 +78,22 @@ describe Less::Parser do
     end
   end
 
+  describe "relative urls" do
+
+    it "keeps relative imports when true" do
+      parser = Less::Parser.new :paths => [ cwd ], :relativeUrls => true
+      expected = "@import \"some/some.css\";\nbody {\n  background: url('some/assets/logo.png');\n}\n"
+      expect( parser.parse('@import "some/some.less";').to_css ).to eql expected
+    end
+
+    it "does not keep relative imports when false" do
+      parser = Less::Parser.new :paths => [ cwd ], :relativeUrls => false
+      expected = "@import \"some.css\";\nbody {\n  background: url('assets/logo.png');\n}\n"
+      expect( parser.parse('@import "some/some.less";').to_css ).to eql expected
+    end
+    
+  end
+  
   # NOTE: runs JS tests from less.js it's a replacement for less-test.js
   describe "less-test", :integration => true do
     
