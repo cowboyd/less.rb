@@ -55,6 +55,11 @@ module Less
       def self.basename(path)
         File.basename(path)
       end
+      
+      def self.resolve(path)
+        File.basename(path)
+      end
+      
     end
     
     module Util # :nodoc:
