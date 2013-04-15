@@ -27,6 +27,15 @@ describe Less::Parser do
     lambda { subject.parse('body { color: @a; }').to_css }.should raise_error(Less::ParseError, /variable @a is undefined/)
   end
 
+  describe "when configured with source mapping" do
+    subject { Less::Parser.new(:filename => 'one.less', :paths => [ cwd.join('one'), cwd.join('two') ], :dumpLineNumbers => 'mediaquery') }
+    
+    it "prints source maps" do
+      subject.parse('@import "one.less"; @import "two.less";').to_css(:compress => false).gsub(/\n/,'').strip.should eql "@media -sass-debug-info{filename{font-family:file\\:\\/\\/one\\.less}line{font-family:\\000031}}.one {  width: 1;}@media -sass-debug-info{filename{font-family:file\\:\\/\\/two\\.less}line{font-family:\\000031}}.two {  width: 1;}"
+    end
+    
+  end
+  
   describe "when configured with multiple load paths" do
     subject { Less::Parser.new :paths => [ cwd.join('one'), cwd.join('two'), cwd.join('faulty') ] }
 
