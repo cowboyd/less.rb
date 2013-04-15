@@ -13,7 +13,7 @@ module Less
     # @option options [TrueClass, FalseClass] :compress
     # @option options [TrueClass, FalseClass] :strictImports
     # @option options [TrueClass, FalseClass] :relativeUrls
-    # @option options [TrueClass, FalseClass] :dumpLineNumbers
+    # @option options [String] :dumpLineNumbers one of 'mediaquery', 'comments', or 'all'
     def initialize(options = {})
       # LeSS supported _env_ options :
       # 
