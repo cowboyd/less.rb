@@ -15,7 +15,7 @@ describe Less::Parser do
     end
 
     it "accepts options when assembling the parse tree" do
-      subject.parse(".class {width: 1+1}").to_css(:compress => true).strip.should eql ".class{width:2;}"
+      subject.parse(".class {width: 1+1}").to_css(:compress => true).strip.should eql ".class{width:2}"
     end
   end
 
@@ -62,8 +62,8 @@ describe Less::Parser do
       rescue Less::ParseError => e
         e.type.should == 'Name'
         e.filename.should == cwd.join('faulty/faulty.less').to_s
-        e.line.should == 1
-        e.column.should == 16
+        e.line.should == 2
+        e.column.should == 9
       else
         fail "parse error not raised"
       end
@@ -155,9 +155,9 @@ describe Less::Parser do
       end
       
       it "#{base_name}.less" do
-        parser = Less::Parser.new(:paths => [ File.dirname(less_file) ])
+        parser = Less::Parser.new(:filename => less_file, :paths => [ File.dirname(less_file) ])
         less = parser.parse( less_content )
-        less.to_css.should == File.read(css_file)
+        less.to_css(:strictMath => true, :silent => true).should == File.read(css_file)
       end
       
     end
