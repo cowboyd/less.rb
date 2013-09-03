@@ -2,6 +2,7 @@ require 'pathname'
 require 'commonjs'
 require 'net/http'
 require 'uri'
+require 'base64'
 
 module Less
   class Loader
@@ -38,6 +39,10 @@ module Less
       def log(*msgs)
         puts msgs.join(', ')
       end
+
+      def warn(*msgs)
+        $stderr.puts msgs.join(', ')
+      end
     end
     
     # stubbed JS modules (required by less.js) :
@@ -54,6 +59,10 @@ module Less
 
       def self.basename(path)
         File.basename(path)
+      end
+      
+      def self.extname(path)
+        File.extname(path)
       end
       
       def self.resolve(path)
@@ -84,6 +93,30 @@ module Less
         callback.call(nil, File.read(path))
       end
       
+      def self.readFileSync(path, encoding)
+        Buffer.new(path)
+      end
+
+      class Buffer
+        attr_accessor :data
+
+        def initialize(path)
+          @data = File.read(path)
+        end
+
+        def length
+          @data.length
+        end
+
+        def toString(*args)
+          if args.last == "base64"
+            Base64.strict_encode64(@data)
+          else
+            @data
+          end
+        end
+      end
+
     end
 
     module Url # :nodoc:
