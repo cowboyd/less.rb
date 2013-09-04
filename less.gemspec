@@ -11,8 +11,8 @@ Gem::Specification.new do |s|
   s.homepage    = "http://lesscss.org"
   s.summary     = %q{Leaner CSS, in your browser or Ruby (via less.js)}
   s.description = %q{Invoke the Less CSS compiler from Ruby}
-
   s.rubyforge_project = "less"
+  s.license     = 'Apache 2.0'
 
   s.files         = `git ls-files`.split("\n")
   Dir.chdir('lib/less/js') do
