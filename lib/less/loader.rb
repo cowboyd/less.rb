@@ -114,7 +114,8 @@ module Less
       def toString(encoding = nil, begPos = 0, endPos = length)
         data = @data[ begPos..endPos ]
         if encoding == 'base64'
-          Base64.strict_encode64(data)
+          data = Base64.encode64(data)
+          data.chomp!; data
         else # encoding == 'binary'
           data
         end
