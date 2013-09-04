@@ -6,9 +6,9 @@ require 'base64'
 
 module Less
   class Loader
-    
+
     attr_reader :environment
-    
+
     def initialize
       context_wrapper = Less::JavaScript.context_wrapper.instance
       @context = context_wrapper.unwrap
@@ -22,13 +22,13 @@ module Less
       @environment.native('url', Url)
       @environment.native('http', Http)
     end
-    
+
     def require(module_id)
       @environment.require(module_id)
     end
-    
+
     # JS exports (required by less.js) :
-    
+
     class Process # :nodoc:
       def exit(*args)
         warn("JS process.exit(#{args.first}) called from: \n#{caller.join("\n")}")
@@ -44,9 +44,9 @@ module Less
         $stderr.puts msgs.join(', ')
       end
     end
-    
+
     # stubbed JS modules (required by less.js) :
-    
+
     module Path # :nodoc:
       def self.join(*components)
         # node.js expands path on join
@@ -60,31 +60,31 @@ module Less
       def self.basename(path)
         File.basename(path)
       end
-      
+
       def self.extname(path)
         File.extname(path)
       end
-      
+
       def self.resolve(path)
         File.basename(path)
       end
-      
+
     end
-    
+
     module Util # :nodoc:
-      
+
       def self.error(*errors)
         raise errors.join(' ')
       end
-      
+
       def self.puts(*args)
         args.each { |arg| STDOUT.puts(arg) }
       end
-      
+
     end
 
     module FS # :nodoc:
-      
+
       def self.statSync(path)
         File.stat(path)
       end
@@ -92,35 +92,37 @@ module Less
       def self.readFile(path, encoding, callback)
         callback.call(nil, File.read(path))
       end
-      
-      def self.readFileSync(path, encoding)
-        Buffer.new(path)
-      end
 
-      class Buffer
-        attr_accessor :data
-
-        def initialize(path)
-          @data = File.read(path)
-        end
-
-        def length
-          @data.length
-        end
-
-        def toString(*args)
-          if args.last == "base64"
-            Base64.strict_encode64(@data)
-          else
-            @data
-          end
-        end
+      def self.readFileSync(path, encoding = nil)
+        Buffer.new(File.read(path),  encoding)
       end
 
     end
 
+    class Buffer # :nodoc:
+
+      attr_accessor :data
+
+      def initialize(data, encoding = nil)
+        @data = data
+      end
+
+      def length
+        @data.length
+      end
+
+      def toString(encoding = nil, begPos = 0, endPos = length)
+        data = @data[ begPos..endPos ]
+        if encoding == 'base64'
+          Base64.strict_encode64(data)
+        else # encoding == 'binary'
+          data
+        end
+      end
+    end
+
     module Url # :nodoc:
-      
+
       def self.resolve(*args)
         URI.join(*args)
       end
@@ -137,11 +139,11 @@ module Less
         result['hash']     = '#' + u.fragment if u.fragment
         result
       end
-      
+
     end
-    
+
     module Http # :nodoc:
-      
+
       def self.get(options, callback)
         err = nil
         begin
@@ -182,7 +184,7 @@ module Less
         end
         ret
       end
-      
+
       class HttpGetResult
         attr_accessor :err
 
@@ -218,8 +220,8 @@ module Less
           end
         end
       end
-      
+
     end
-    
+
   end
 end
