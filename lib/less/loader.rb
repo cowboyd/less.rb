@@ -115,7 +115,7 @@ module Less
         data = @data[ begPos..endPos ]
         if encoding == 'base64'
           data = Base64.encode64(data)
-          data.chomp!; data
+          data.delete!("\n"); data
         else # encoding == 'binary'
           data
         end
