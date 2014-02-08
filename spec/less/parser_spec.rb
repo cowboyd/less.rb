@@ -20,7 +20,7 @@ describe Less::Parser do
   end
 
   it "throws a ParseError if the lesscss is bogus" do
-    lambda { subject.parse('{^)') }.should raise_error(Less::ParseError, /missing closing `\}`/)
+    lambda { subject.parse('{^)') }.should raise_error(Less::ParseError, /missing opening `\(`/)
   end
 
   it "passes exceptions from the less compiler" do
@@ -29,13 +29,13 @@ describe Less::Parser do
 
   describe "when configured with source mapping" do
     subject { Less::Parser.new(:filename => 'one.less', :paths => [ cwd.join('one'), cwd.join('two') ], :dumpLineNumbers => 'mediaquery') }
-    
+
     it "prints source maps" do
       subject.parse('@import "one.less"; @import "two.less";').to_css(:compress => false).gsub(/\n/,'').strip.should eql "@media -sass-debug-info{filename{font-family:file\\:\\/\\/one\\.less}line{font-family:\\000031}}.one {  width: 1;}@media -sass-debug-info{filename{font-family:file\\:\\/\\/two\\.less}line{font-family:\\000031}}.two {  width: 1;}"
     end
-    
+
   end
-  
+
   describe "when configured with multiple load paths" do
     subject { Less::Parser.new :paths => [ cwd.join('one'), cwd.join('two'), cwd.join('faulty') ] }
 
@@ -100,12 +100,12 @@ describe Less::Parser do
       expected = "@import \"some.css\";\nbody {\n  background: url('assets/logo.png');\n}\n"
       expect( parser.parse('@import "some/some.less";').to_css ).to eql expected
     end
-    
+
   end
-  
+
   # NOTE: runs JS tests from less.js it's a replacement for less-test.js
   describe "less-test", :integration => true do
-    
+
     TEST_LESS_DIR = File.expand_path('../../lib/less/js/test/less', File.dirname(__FILE__))
     TEST_CSS_DIR =  File.expand_path('../../lib/less/js/test/css' , File.dirname(__FILE__))
 
@@ -130,19 +130,19 @@ describe Less::Parser do
         end
       end
     end
-    
+
     after :all do
       Less.tree.functions[:add] = nil
       Less.tree.functions[:increment] = nil
       Less.tree.functions[:_color] = nil
     end
-    
+
     Dir.glob(File.join(TEST_LESS_DIR, '*.less')).each do |less_file|
-      
+
       base_name = File.basename(less_file, '.less')
       css_file = File.join(TEST_CSS_DIR, "#{base_name}.css")
       raise "missing css file: #{css_file}" unless File.exists?(css_file)
-      
+
       less_content = File.read(less_file)
       case base_name
         when 'javascript'
@@ -153,15 +153,15 @@ describe Less::Parser do
           # with something that won't fail (since we're not in Node.JS)
           less_content.sub!('process.title', '"node"')
       end
-      
+
       it "#{base_name}.less" do
         parser = Less::Parser.new(:filename => less_file, :paths => [ File.dirname(less_file) ])
         less = parser.parse( less_content )
         less.to_css(:strictMath => true, :silent => true).should == File.read(css_file)
       end
-      
+
     end
-    
+
   end
-  
+
 end
