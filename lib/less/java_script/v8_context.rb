@@ -77,7 +77,7 @@ module Less
           #   }, env);
           #
           # comes back as value: RuntimeError !
-          elsif e.value.to_s =~ /missing closing `\}`/
+          elsif e.value.to_s =~ /missing opening `\(`/
             raise Less::ParseError.new(e.value.to_s)
           end
           raise Less::Error.new(e)

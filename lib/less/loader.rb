@@ -14,6 +14,7 @@ module Less
       @context = context_wrapper.unwrap
       @context['process'] = Process.new
       @context['console'] = Console.new
+      @context['Buffer'] = Buffer
       path = Pathname(__FILE__).dirname.join('js', 'lib')
       @environment = CommonJS::Environment.new(@context, :path => path.to_s)
       @environment.native('path', Path)
@@ -94,7 +95,8 @@ module Less
       end
 
       def self.readFileSync(path, encoding = nil)
-        Buffer.new(File.read(path),  encoding)
+        buf = Buffer.new(File.read(path),  encoding)
+        encoding.nil? ? buf : buf.toString(encoding)
       end
 
     end
@@ -104,6 +106,9 @@ module Less
       attr_accessor :data
 
       def initialize(data, encoding = nil)
+        unless data.is_a? String
+          data = data.to_ruby
+        end
         @data = data
       end
 
